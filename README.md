@@ -25,7 +25,7 @@ A **Retrieval-Augmented Generation (RAG)** server built with Spring Boot, Spring
 │         ▼                                    ▼                     │
 │  ┌─────────────┐                    ┌─────────────┐               │
 │  │   Ollama    │                    │   Ollama    │               │
-│  │ all-minilm  │                    │   llama3    │               │
+│  │ all-minilm  │                    │ llama3.2:1b │               │
 │  │ (Embedding) │                    │  (Chat LLM) │               │
 │  └──────┬──────┘                    └─────────────┘               │
 │         │                                                          │
@@ -60,7 +60,7 @@ Files in classpath:pdf/
 ```
 User sends question via POST /api/v1/rag/chat
     → QuestionAnswerAdvisor searches PGVector for relevant chunks (similarity search)
-    → Relevant chunks + user question sent to Ollama llama3
+    → Relevant chunks + user question sent to Ollama llama3.2:1b
     → LLM generates an answer grounded in the document context
     → Response returned to user
 ```
@@ -75,8 +75,8 @@ User sends question via POST /api/v1/rag/chat
 | **Spring Boot** | 4.1.0 | Application framework |
 | **Spring AI** | 2.0.0 | AI/LLM integration framework |
 | **Ollama** | Latest | Local LLM inference server |
-| **llama3** | 8B | Chat/language model for generating answers |
-| **mxbai-embed-large** / **all-minilm** | ~45MB | Embedding model (384 dimensions) |
+| **llama3.2:1b** | 1B (~1.3GB) | Chat/language model for generating answers |
+| **all-minilm** | ~45MB | Embedding model (384 dimensions) |
 | **PostgreSQL** | 14+ | Relational database |
 | **PGVector** | Extension | Vector similarity search in PostgreSQL |
 | **Apache Tika** | 3.x | Document parsing (PDF, DOCX, TXT, etc.) |
@@ -147,8 +147,8 @@ curl http://localhost:11434
 # Embedding model (~45 MB) — required for document vectorization
 ollama pull all-minilm
 
-# Chat model (~4.7 GB) — required for answering questions
-ollama pull llama3
+# Chat model (~1.3 GB) — required for answering questions
+ollama pull llama3.2:1b
 ```
 
 **Verify models are available:**
@@ -160,7 +160,7 @@ ollama list
 Expected output:
 ```
 NAME                    SIZE
-llama3:latest           4.7 GB
+llama3.2:1b:latest      1.3 GB
 all-minilm:latest       45 MB
 ```
 
