@@ -25,9 +25,8 @@ A **Retrieval-Augmented Generation (RAG)** server built with Spring Boot, Spring
 │         ▼                                    ▼                     │
 │  ┌─────────────┐                    ┌─────────────┐               │
 │  │   Ollama    │                    │   Ollama    │               │
-│  │ mxbai-embed │                    │   llama3    │               │
-│  │  -large     │                    │  (Chat LLM) │               │
-│  │ (Embedding) │                    │             │               │
+│  │ all-minilm  │                    │   llama3    │               │
+│  │ (Embedding) │                    │  (Chat LLM) │               │
 │  └──────┬──────┘                    └─────────────┘               │
 │         │                                                          │
 │         ▼                                                          │
@@ -39,7 +38,7 @@ A **Retrieval-Augmented Generation (RAG)** server built with Spring Boot, Spring
 │  │  ├── content (TEXT)        ├── filename   │                      │
 │  │  ├── metadata (JSON)      ├── file_hash  │                      │
 │  │  └── embedding (vector)   ├── chunk_count│                      │
-│  │      (1024 dims)          └── ingested_at│                      │
+│  │      (384 dims)           └── ingested_at│                      │
 │  └──────────────────────────────────────────┘                      │
 └─────────────────────────────────────────────────────────────────────┘
 ```
@@ -52,7 +51,7 @@ Files in classpath:pdf/
     → Apache Tika reads file content (supports PDF, DOCX, TXT, etc.)
     → TokenTextSplitter splits content into chunks
     → SHA-256 hash computed per file (skip if already ingested)
-    → Ollama mxbai-embed-large converts each chunk into a 1024-dim vector
+    → Ollama all-minilm converts each chunk into a 384-dim vector
     → Vectors stored in PostgreSQL via PGVector extension
     → Ingestion recorded in document_ingestion_log table
 ```
@@ -77,7 +76,7 @@ User sends question via POST /api/v1/rag/chat
 | **Spring AI** | 2.0.0 | AI/LLM integration framework |
 | **Ollama** | Latest | Local LLM inference server |
 | **llama3** | 8B | Chat/language model for generating answers |
-| **mxbai-embed-large** | — | Embedding model (1024 dimensions) |
+| **mxbai-embed-large** / **all-minilm** | ~45MB | Embedding model (384 dimensions) |
 | **PostgreSQL** | 14+ | Relational database |
 | **PGVector** | Extension | Vector similarity search in PostgreSQL |
 | **Apache Tika** | 3.x | Document parsing (PDF, DOCX, TXT, etc.) |
@@ -145,8 +144,8 @@ curl http://localhost:11434
 **Pull the required models:**
 
 ```bash
-# Embedding model (~670 MB) — required for document vectorization
-ollama pull mxbai-embed-large
+# Embedding model (~45 MB) — required for document vectorization
+ollama pull all-minilm
 
 # Chat model (~4.7 GB) — required for answering questions
 ollama pull llama3
@@ -162,7 +161,7 @@ Expected output:
 ```
 NAME                    SIZE
 llama3:latest           4.7 GB
-mxbai-embed-large:latest 670 MB
+all-minilm:latest       45 MB
 ```
 
 ---
@@ -205,11 +204,11 @@ spring.datasource.password=root
 spring.ai.vectorstore.pgvector.initialize-schema=true
 spring.ai.vectorstore.pgvector.index-type=HNSW
 spring.ai.vectorstore.pgvector.distance-type=COSINE_DISTANCE
-spring.ai.vectorstore.pgvector.dimensions=1024
+spring.ai.vectorstore.pgvector.dimensions=384
 
 # Ollama models
 spring.ai.ollama.chat.model=llama3
-spring.ai.ollama.embedding.model=mxbai-embed-large
+spring.ai.ollama.embedding.model=all-minilm
 ```
 
 ### 4. Build
@@ -230,7 +229,7 @@ On first startup, the ingestion pipeline runs automatically:
 1. Reads all files from `classpath:pdf/`
 2. Computes SHA-256 hash for each file
 3. Splits documents into chunks
-4. Embeds chunks via Ollama (`mxbai-embed-large`)
+4. Embeds chunks via Ollama (`all-minilm`)
 5. Stores vectors in PGVector
 6. Logs ingestion in `document_ingestion_log` table
 
@@ -283,7 +282,7 @@ Stores document chunks and their vector embeddings.
 | `id` | UUID | Primary key |
 | `content` | TEXT | Document chunk text |
 | `metadata` | JSON | Source metadata (filename, page, etc.) |
-| `embedding` | vector(1024) | Vector embedding from mxbai-embed-large |
+| `embedding` | vector(384) | Vector embedding from all-minilm |
 
 ### `document_ingestion_log` (managed by application)
 
