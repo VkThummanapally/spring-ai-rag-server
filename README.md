@@ -120,13 +120,13 @@ CREATE EXTENSION IF NOT EXISTS vector;
 > On Windows, if using the installer, PGVector may need to be installed separately.
 > See: [https://github.com/pgvector/pgvector](https://github.com/pgvector/pgvector)
 
-**Default connection settings** (configured in `application.properties`):
+**Default connection settings** (configured in `application.yml`):
 
 | Property | Value |
 |----------|-------|
 | Host | `localhost` |
 | Port | `5432` |
-| Database | `postgres` |
+| Database | `vectordb` |
 | Username | `postgres` |
 | Password | `root` |
 
@@ -192,23 +192,36 @@ src/main/resources/pdf/
 
 ### 3. Configure (Optional)
 
-Edit `src/main/resources/application.properties` if your setup differs from defaults:
+Edit `src/main/resources/application.yml` if your setup differs from defaults:
 
-```properties
-# PostgreSQL connection
-spring.datasource.url=jdbc:postgresql://localhost:5432/postgres
-spring.datasource.username=postgres
-spring.datasource.password=root
+```yaml
+spring:
+  application:
+    name: spring-ai-rag-server
 
-# PGVector settings
-spring.ai.vectorstore.pgvector.initialize-schema=true
-spring.ai.vectorstore.pgvector.index-type=HNSW
-spring.ai.vectorstore.pgvector.distance-type=COSINE_DISTANCE
-spring.ai.vectorstore.pgvector.dimensions=384
+  datasource:
+    url: jdbc:postgresql://localhost:5432/vectordb
+    username: postgres
+    password: root
+    driver-class-name: org.postgresql.Driver
 
-# Ollama models
-spring.ai.ollama.chat.model=llama3
-spring.ai.ollama.embedding.model=all-minilm
+  ai:
+    vectorstore:
+      pgvector:
+        initialize-schema: true
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+        dimensions: 384
+
+    ollama:
+      chat:
+        model: llama3.2:1b
+        options:
+          keep-alive: 5m
+      embedding:
+        model: all-minilm
+        options:
+          keep-alive: 5m
 ```
 
 ### 4. Build
@@ -317,7 +330,7 @@ spring-ai-rag-server/
 │   └── loader/
 │       └── PdfDataLoaderRunner.java           # Startup document ingestion pipeline
 ├── src/main/resources/
-│   ├── application.properties                 # Configuration
+│   ├── application.yml                 # Configuration
 │   └── pdf/                                   # Place documents here
 │       └── *.pdf, *.docx, *.txt, ...
 ├── pom.xml                                    # Maven dependencies
@@ -343,7 +356,7 @@ Connection refused: localhost/127.0.0.1:11434
 model "mistral" not found
 ```
 
-**Fix:** Ensure the correct models are pulled and configured in `application.properties`:
+**Fix:** Ensure the correct models are pulled and configured in `application.yml`:
 
 ```bash
 ollama pull llama3

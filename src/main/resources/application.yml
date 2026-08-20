@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: spring-ai-rag-server
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/vectordb
+    username: postgres
+    password: root
+    driver-class-name: org.postgresql.Driver
+
+  ai:
+    vectorstore:
+      pgvector:
+        initialize-schema: true
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+        dimensions: 384
+
+    ollama:
+      chat:
+        model: llama3.2:1b
+        options:
+          keep-alive: 5m
+      embedding:
+        model: all-minilm
+        options:
+          keep-alive: 5m
